@@ -19,11 +19,7 @@ public class ConfigUtils {
             userDir = userDir.substring(0, userDir.length() - 4);
         } else {
             String separator = File.separator;
-            if (userDir.contains(MAIN_DIRECTORY_NAME)) {
-                userDir = userDir + separator + "src" + separator +  "main";
-            } else {
-                userDir = userDir + separator + MAIN_DIRECTORY_NAME + separator + "src" + separator + "main";
-            }
+            userDir = userDir + separator + MAIN_DIRECTORY_NAME + separator + "src" + separator + "main";
         }
         return userDir;
     }

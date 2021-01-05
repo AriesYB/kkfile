@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1.0">
     <title>普通文本预览</title>
     <#include  "*/commonHeader.ftl">
+    <style type="text/css">
+        body {
+            background-color: #ffffff;
+        }
+    </style>
 </head>
 <body>
 
