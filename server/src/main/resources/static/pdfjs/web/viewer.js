@@ -1100,6 +1100,14 @@ var PDFViewerApplication = {
                 }
 
                 return loadingErrorMessage.then(function (msg) {
+					var customEvent = new Event('Custom_Pdf_Event');
+					customEvent.initEvent('pdfjs_error',false,false);
+					customEvent.detail={
+						msg,
+						message,
+						exception
+                  }
+                  window.dispatchEvent(customEvent);
                   _this7.error(msg, {
                     message: message
                   });
