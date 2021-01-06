@@ -17,13 +17,13 @@
 
 <div class="container">
     <div class="panel panel-default">
-        <div class="panel-heading">
-            <h4 class="panel-title">
-                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
-                    ${file.name}
-                </a>
-            </h4>
-        </div>
+<#--        <div class="panel-heading">-->
+<#--            <h4 class="panel-title">-->
+<#--                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">-->
+<#--                    ${file.name}-->
+<#--                </a>-->
+<#--            </h4>-->
+<#--        </div>-->
         <div class="panel-body">
             <div id="text"></div>
         </div>
@@ -44,10 +44,13 @@
      *加载普通文本
      */
     function loadText() {
-        var base64data = $("#textData").val()
-        var textData = Base64.decode(base64data);
-        var textPreData = "<xmp style='background-color: #FFFFFF;overflow-y: scroll;border:none'>" + textData + "</xmp>";
-        $("#text").append(textPreData);
+        window.textData = Base64.decode($("#textData").val())
+        window.textPreData = "<pre>" + window.textData + "</pre>";
+        $("#text").html(window.textPreData);
+        // var base64data = $("#textData").val()
+        // var textData = Base64.decode(base64data);
+        // var textPreData = "<xmp style='background-color: #FFFFFF;overflow-y: scroll;border:none'>" + textData + "</xmp>";
+        // $("#text").append(textPreData);
     }
 
 </script>
