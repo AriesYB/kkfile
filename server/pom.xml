@@ -11,7 +11,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>cn.keking</groupId>
-    <artifactId>kkFileView</artifactId>
+    <artifactId>gpx-kkfile-server</artifactId>
     <version>3.3.0</version>
 
     <properties>
@@ -296,6 +296,14 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <finalName>${project.build.finalName}</finalName>
+                    <mainClass>cn.keking.ServerMain</mainClass>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
