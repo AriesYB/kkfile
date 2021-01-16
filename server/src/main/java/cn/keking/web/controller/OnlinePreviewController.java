@@ -1,28 +1,29 @@
 package cn.keking.web.controller;
 
+import cn.keking.file.entity.FileInfo;
+import cn.keking.file.service.FileInfoService;
 import cn.keking.model.FileAttribute;
+import cn.keking.service.FileHandlerService;
 import cn.keking.service.FilePreview;
 import cn.keking.service.FilePreviewFactory;
-
 import cn.keking.service.cache.CacheService;
 import cn.keking.service.impl.OtherFilePreviewImpl;
-import cn.keking.service.FileHandlerService;
 import cn.keking.utils.WebUtils;
 import io.mola.galimatias.GalimatiasParseException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -42,12 +43,18 @@ public class OnlinePreviewController {
     private final CacheService cacheService;
     private final FileHandlerService fileHandlerService;
     private final OtherFilePreviewImpl otherFilePreview;
+    private final FileInfoService fileInfoService;
 
-    public OnlinePreviewController(FilePreviewFactory filePreviewFactory, FileHandlerService fileHandlerService, CacheService cacheService, OtherFilePreviewImpl otherFilePreview) {
+    @Value("${nas.dir}")
+    private String nasDir;
+
+
+    public OnlinePreviewController(FilePreviewFactory filePreviewFactory, FileHandlerService fileHandlerService, CacheService cacheService, OtherFilePreviewImpl otherFilePreview, FileInfoService fileInfoService) {
         this.previewFactory = filePreviewFactory;
         this.fileHandlerService = fileHandlerService;
         this.cacheService = cacheService;
         this.otherFilePreview = otherFilePreview;
+        this.fileInfoService = fileInfoService;
     }
 
     @RequestMapping(value = "/onlinePreview")
@@ -63,6 +70,35 @@ public class OnlinePreviewController {
         model.addAttribute("file", fileAttribute);
         FilePreview filePreview = previewFactory.get(fileAttribute);
         logger.info("预览文件url：{}，previewType：{}", fileUrl, fileAttribute.getType());
+        return filePreview.filePreviewHandle(fileUrl, model, fileAttribute);
+    }
+
+    /**
+     * 通过id预览内部文件
+     *
+     * @param id 文件id
+     */
+    @RequestMapping(value = "/onlinePreviewInternal")
+    public String onlinePreviewInternal(@RequestParam("id") String id, Model model, HttpServletRequest req) {
+        String fileUrl;
+        try {
+            //base64解码
+            id =new String(Base64.decodeBase64(id));
+        } catch (Exception ex) {
+            logger.error(ex.getMessage(),ex);
+            String errorMsg = String.format(BASE64_DECODE_ERROR_MSG, "id");
+            throw new RuntimeException(errorMsg);
+        }
+        FileInfo fileInfo = fileInfoService.getByIdAndStatus(id);
+        if (fileInfo==null){
+            throw new RuntimeException("该文件不存在");
+        }
+        //通过nas访问相当于本地访问需要加file:///
+        fileUrl = "file:///"+nasDir+fileInfo.getFullPath();
+        FileAttribute fileAttribute = fileHandlerService.getFileAttribute(fileUrl, req);
+        model.addAttribute("file", fileAttribute);
+        FilePreview filePreview = previewFactory.get(fileAttribute);
+        logger.info("通过id预览文件url：{}，previewType：{}", fileUrl, fileAttribute.getType());
         return filePreview.filePreviewHandle(fileUrl, model, fileAttribute);
     }
 
