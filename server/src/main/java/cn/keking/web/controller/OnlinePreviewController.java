@@ -1,6 +1,5 @@
 package cn.keking.web.controller;
 
-import cn.keking.file.entity.FileInfo;
 import cn.keking.file.service.FileInfoService;
 import cn.keking.model.FileAttribute;
 import cn.keking.service.FileHandlerService;
@@ -14,13 +13,11 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
@@ -48,9 +45,6 @@ public class OnlinePreviewController {
     private final OtherFilePreviewImpl otherFilePreview;
     private final FileInfoService fileInfoService;
 
-    @Value("${nas.dir}")
-    private String nasDir;
-
 
     public OnlinePreviewController(FilePreviewFactory filePreviewFactory, FileHandlerService fileHandlerService, CacheService cacheService, OtherFilePreviewImpl otherFilePreview, FileInfoService fileInfoService) {
         this.previewFactory = filePreviewFactory;
@@ -61,50 +55,30 @@ public class OnlinePreviewController {
     }
 
     @RequestMapping(value = "/onlinePreview")
-    public String onlinePreview(String url, Model model, HttpServletRequest req) {
-        String fileUrl;
+    public String onlinePreview(String url, String fileId, Model model, HttpServletRequest req) {
+        String fileUrl = "";
         try {
-            fileUrl = new String(Base64.decodeBase64(url));
+            if (url != null) {
+                fileUrl = new String(Base64.decodeBase64(url));
+            } else if (fileId != null) {
+                fileId = new String(Base64.decodeBase64(fileId));
+                fileUrl = fileInfoService.getFileUrlByIdAndStatus(fileId);
+                if (fileUrl == null) {
+                    logger.error("文件fileId={}不存在", fileId);
+                    model.addAttribute("msg", "未查询到文件记录!");
+                    return FilePreview.FILE_NOT_FOUND_PAGE;
+                }
+            }
         } catch (Exception ex) {
             String errorMsg = String.format(BASE64_DECODE_ERROR_MSG, "url");
+            //fileNotSupported.ftl中会访问file，因此必须添加该属性。
+            model.addAttribute("file", new FileAttribute());
             return otherFilePreview.notSupportedFile(model, errorMsg);
         }
         FileAttribute fileAttribute = fileHandlerService.getFileAttribute(fileUrl, req);
         model.addAttribute("file", fileAttribute);
         FilePreview filePreview = previewFactory.get(fileAttribute);
         logger.info("预览文件url：{}，previewType：{}", fileUrl, fileAttribute.getType());
-        return filePreview.filePreviewHandle(fileUrl, model, fileAttribute);
-    }
-
-    /**
-     * 通过id预览内部文件
-     *
-     * @param id 文件id
-     */
-    @RequestMapping(value = "/onlinePreviewInternal")
-    public String onlinePreviewInternal(@RequestParam("id") String id, Model model, HttpServletRequest req) {
-        String fileUrl;
-        try {
-            //base64解码
-            id =new String(Base64.decodeBase64(id));
-        } catch (Exception ex) {
-            logger.error(ex.getMessage(),ex);
-            String errorMsg = String.format(BASE64_DECODE_ERROR_MSG, "id");
-            model.addAttribute("file",new FileAttribute());
-            return otherFilePreview.notSupportedFile(model, errorMsg);
-        }
-        FileInfo fileInfo = fileInfoService.getByIdAndStatus(id);
-        if (fileInfo==null){
-            model.addAttribute("msg","未查询到文件信息");
-            logger.info("未查询文件,id={}",id);
-            return FilePreview.FILE_NOT_FOUND_PAGE;
-        }
-        //通过nas访问相当于本地访问需要加file:///
-        fileUrl = "file:///"+nasDir+fileInfo.getFullPath();
-        FileAttribute fileAttribute = fileHandlerService.getFileAttribute(fileUrl, req);
-        model.addAttribute("file", fileAttribute);
-        FilePreview filePreview = previewFactory.get(fileAttribute);
-        logger.info("通过id预览文件url：{}，previewType：{}", fileUrl, fileAttribute.getType());
         return filePreview.filePreviewHandle(fileUrl, model, fileAttribute);
     }
 

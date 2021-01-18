@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * 文件信息
  * <br/>
- * 实际上为文件上产日志table:file_upload_log
+ * 实际上为文件上传日志
  * @author yangbiao
  * @date 2021/1/15 10:50
  */
