@@ -20,6 +20,7 @@ public interface FilePreview {
     String XML_FILE_PREVIEW_PAGE = "xml";
     String MARKDOWN_FILE_PREVIEW_PAGE = "markdown";
     String NOT_SUPPORTED_FILE_PAGE = "fileNotSupported";
+    String FILE_NOT_FOUND_PAGE = "fileNotFound";
 
     String filePreviewHandle(String url, Model model, FileAttribute fileAttribute);
 }

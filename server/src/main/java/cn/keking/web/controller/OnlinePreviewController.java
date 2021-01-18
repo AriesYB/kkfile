@@ -18,7 +18,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -87,11 +90,14 @@ public class OnlinePreviewController {
         } catch (Exception ex) {
             logger.error(ex.getMessage(),ex);
             String errorMsg = String.format(BASE64_DECODE_ERROR_MSG, "id");
-            throw new RuntimeException(errorMsg);
+            model.addAttribute("file",new FileAttribute());
+            return otherFilePreview.notSupportedFile(model, errorMsg);
         }
         FileInfo fileInfo = fileInfoService.getByIdAndStatus(id);
         if (fileInfo==null){
-            throw new RuntimeException("该文件不存在");
+            model.addAttribute("msg","未查询到文件信息");
+            logger.info("未查询文件,id={}",id);
+            return FilePreview.FILE_NOT_FOUND_PAGE;
         }
         //通过nas访问相当于本地访问需要加file:///
         fileUrl = "file:///"+nasDir+fileInfo.getFullPath();
