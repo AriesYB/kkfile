@@ -29,7 +29,6 @@ public class FilterConfiguration {
     public FilterRegistrationBean getTrustHostFilter() {
         Set<String> filterUri = new HashSet<>();
         filterUri.add("/onlinePreview");
-        filterUri.add("/onlinePreviewInternal");
         filterUri.add("/picturesPreview");
         filterUri.add("/getCorsFile");
         filterUri.add("/addTask");
@@ -45,7 +44,6 @@ public class FilterConfiguration {
         Set<String> filterUri = new HashSet<>();
         filterUri.add("/index");
         filterUri.add("/onlinePreview");
-        filterUri.add("/onlinePreviewInternal");
         filterUri.add("/picturesPreview");
         BaseUrlFilter filter = new BaseUrlFilter();
         FilterRegistrationBean registrationBean = new FilterRegistrationBean();
@@ -58,7 +56,6 @@ public class FilterConfiguration {
     public FilterRegistrationBean getWatermarkConfigFilter() {
         Set<String> filterUri = new HashSet<>();
         filterUri.add("/onlinePreview");
-        filterUri.add("/onlinePreviewInternal");
         filterUri.add("/picturesPreview");
         AttributeSetFilter filter = new AttributeSetFilter();
         FilterRegistrationBean registrationBean = new FilterRegistrationBean();
