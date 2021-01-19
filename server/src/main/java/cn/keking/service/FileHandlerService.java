@@ -17,6 +17,7 @@ import org.apache.pdfbox.tools.imageio.ImageIOUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -33,6 +34,7 @@ import java.util.Map;
  * @author yudian-it
  * @date 2017/11/13
  */
+@DependsOn("configConstants")
 @Component
 public class FileHandlerService {
 
