@@ -240,4 +240,20 @@ public class CacheServiceRocksDBImpl implements CacheService {
         Map<String, Integer> initPDFIMGCache = new HashMap<>();
         db.put(FILE_PREVIEW_PDF_IMGS_KEY.getBytes(), toByteArray(initPDFIMGCache));
     }
+
+    @Override
+    public void putTempFileCache(String key, Map<String, String> value) {
+        //未使用
+    }
+
+    @Override
+    public Map<String, String> getTempFileCache(String key) {
+        //未使用
+        return null;
+    }
+
+    @Override
+    public void initTempFileCache(Integer capacity) {
+        //未使用
+    }
 }

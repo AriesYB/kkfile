@@ -1,8 +1,11 @@
 package cn.keking.utils;
 
 import cpdetector.CharsetPrinter;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +17,9 @@ public class KkFileUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(KkFileUtils.class);
 
     public static final String DEFAULT_FILE_ENCODING = "UTF-8";
+    private static final String URL_PARAM_FTP_USERNAME = "ftp.username";
+    private static final String URL_PARAM_FTP_PASSWORD = "ftp.password";
+    private static final String URL_PARAM_FTP_CONTROL_ENCODING = "ftp.control.encoding";
 
     /**
      * 判断url是否是http资源
@@ -22,7 +28,17 @@ public class KkFileUtils {
      * @return 是否http
      */
     public static boolean isHttpUrl(URL url) {
-        return url.getProtocol().toLowerCase().startsWith("file") || url.getProtocol().toLowerCase().startsWith("http");
+        return url.getProtocol().toLowerCase().startsWith("http");
+    }
+
+    /**
+     * 判断url是否为file资源
+     *
+     * @param url url
+     * @return 是否file
+     */
+    public static boolean isFileUrl(URL url) {
+        return url.getProtocol().toLowerCase().startsWith("file");
     }
 
     /**
@@ -152,4 +168,32 @@ public class KkFileUtils {
         return true;
     }
 
+    /**
+    * 获取文件的修改时间(http、ftp、file)
+    *
+    * @param url url
+    * @return 文件修改时间
+    */
+    public static String getFileModifiedTime(URL url) throws IOException {
+        if (isHttpUrl(url)) {
+            //发起head请求获取文件修改时间
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = restTemplate.headForHeaders(url.toString());
+            return String.valueOf(headers.getLastModified());
+        } else if (isFileUrl(url)) {
+            //获取本地文件修改时间
+            File file = FileUtils.toFile(url);
+            if (file != null) {
+                return String.valueOf(file.lastModified());
+            }
+        } else if (isFtpUrl(url)) {
+            //获取文件修改时间
+            String urlString = url.toString();
+            String ftpUsername = WebUtils.getUrlParameterReg(urlString, URL_PARAM_FTP_USERNAME);
+            String ftpPassword = WebUtils.getUrlParameterReg(urlString, URL_PARAM_FTP_PASSWORD);
+            String ftpControlEncoding = WebUtils.getUrlParameterReg(urlString, URL_PARAM_FTP_CONTROL_ENCODING);
+            return String.valueOf(FtpUtils.lastModified(urlString, ftpUsername, ftpPassword, ftpControlEncoding));
+        }
+        return null;
+    }
 }

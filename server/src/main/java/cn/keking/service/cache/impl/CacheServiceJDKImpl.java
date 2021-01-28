@@ -9,6 +9,7 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -26,6 +27,7 @@ public class CacheServiceJDKImpl implements CacheService {
     private Map<String, String> pdfCache;
     private Map<String, List<String>> imgCache;
     private Map<String, Integer> pdfImagesCache;
+    private Map<String, Map<String, String>> tempFileCache;
     private static final int QUEUE_SIZE = 500000;
     private final BlockingQueue<String> blockingQueue = new ArrayBlockingQueue<>(QUEUE_SIZE);
 
@@ -34,6 +36,7 @@ public class CacheServiceJDKImpl implements CacheService {
         initPDFCachePool(CacheService.DEFAULT_PDF_CAPACITY);
         initIMGCachePool(CacheService.DEFAULT_IMG_CAPACITY);
         initPdfImagesCachePool(CacheService.DEFAULT_PDFIMG_CAPACITY);
+        initTempFileCache(CacheService.DEFAULT_TEMP_FILE_CAPACITY);
     }
 
     @Override
@@ -115,5 +118,23 @@ public class CacheServiceJDKImpl implements CacheService {
         pdfImagesCache = new ConcurrentLinkedHashMap.Builder<String, Integer>()
                 .maximumWeightedCapacity(capacity).weigher(Weighers.singleton())
                 .build();
+    }
+
+    @Override
+    public void putTempFileCache(String key, Map<String, String> value) {
+        tempFileCache.put(key, value);
+    }
+
+    @Override
+    public Map<String, String> getTempFileCache(String key) {
+        if(StringUtils.isEmpty(key)){
+            return new HashMap<>(0);
+        }
+        return tempFileCache.get(key);
+    }
+
+    @Override
+    public void initTempFileCache(Integer capacity) {
+        tempFileCache = new ConcurrentLinkedHashMap.Builder<String,Map<String,String>>().maximumWeightedCapacity(capacity).weigher(Weighers.singleton()).build();
     }
 }

@@ -3,21 +3,30 @@ package cn.keking.utils;
 import cn.keking.config.ConfigConstants;
 import cn.keking.model.FileAttribute;
 import cn.keking.model.ReturnResponse;
+import cn.keking.service.cache.CacheService;
 import io.mola.galimatias.GalimatiasParseException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import java.io.*;
-import java.net.*;
+import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
-import static cn.keking.utils.KkFileUtils.isFtpUrl;
-import static cn.keking.utils.KkFileUtils.isHttpUrl;
+import static cn.keking.utils.KkFileUtils.*;
 
 /**
  * @author yudian-it
  */
+@Component
 public class DownloadUtils {
 
     private final static Logger logger = LoggerFactory.getLogger(DownloadUtils.class);
@@ -25,6 +34,27 @@ public class DownloadUtils {
     private static final String URL_PARAM_FTP_USERNAME = "ftp.username";
     private static final String URL_PARAM_FTP_PASSWORD = "ftp.password";
     private static final String URL_PARAM_FTP_CONTROL_ENCODING = "ftp.control.encoding";
+
+    private CacheService cacheService;
+
+    @Autowired
+    public void setCacheService(CacheService cacheService) {
+        this.cacheService = cacheService;
+    }
+
+    /**
+     * 自身的静态常量
+     */
+    private static final DownloadUtils DOWNLOAD_UTILS = new DownloadUtils();
+
+    private DownloadUtils() {
+        //私有构造方法
+    }
+
+    @PostConstruct
+    private void init() {
+        DOWNLOAD_UTILS.setCacheService(this.cacheService);
+    }
 
     /**
      * @param fileAttribute fileAttribute
@@ -37,7 +67,10 @@ public class DownloadUtils {
         String realPath = DownloadUtils.getRelFilePath(fileName, fileAttribute);
         try {
             URL url = WebUtils.normalizedURL(urlStr);
-            if (isHttpUrl(url)) {
+            //获取源文件修改时间
+            String sourceModifiedTime = KkFileUtils.getFileModifiedTime(url);
+            boolean flag = true;
+            if (isHttpUrl(url) || isFileUrl(url)) {
                 File realFile = new File(realPath);
                 FileUtils.copyURLToFile(url, realFile);
             } else if (isFtpUrl(url)) {
@@ -46,8 +79,16 @@ public class DownloadUtils {
                 String ftpControlEncoding = WebUtils.getUrlParameterReg(fileAttribute.getUrl(), URL_PARAM_FTP_CONTROL_ENCODING);
                 FtpUtils.download(fileAttribute.getUrl(), realPath, ftpUsername, ftpPassword, ftpControlEncoding);
             } else {
+                flag = false;
                 response.setCode(1);
                 response.setMsg("url不能识别url" + urlStr);
+            }
+            //将临时文件名称以及源文件更新日期存入缓存
+            if (flag) {
+                Map<String, String> map = new HashMap<>(2);
+                map.put(CacheService.TEMP_FILE_NAME_KEY, realPath.substring(fileDir.length()));
+                map.put(CacheService.SOURCE_FILE_MODIFIED_TIME_KEY, sourceModifiedTime);
+                DOWNLOAD_UTILS.cacheService.putTempFileCache(fileAttribute.getName(), map);
             }
             response.setContent(realPath);
             response.setMsg(fileName);

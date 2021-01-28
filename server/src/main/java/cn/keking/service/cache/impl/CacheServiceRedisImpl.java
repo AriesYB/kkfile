@@ -85,6 +85,7 @@ public class CacheServiceRedisImpl implements CacheService {
         cleanPdfCache();
         cleanImgCache();
         cleanPdfImgCache();
+        cleanTempFileCache();
     }
 
     @Override
@@ -112,5 +113,27 @@ public class CacheServiceRedisImpl implements CacheService {
     private void cleanPdfImgCache() {
         RMapCache<String, Integer> pdfImg = redissonClient.getMapCache(FILE_PREVIEW_PDF_IMGS_KEY);
         pdfImg.clear();
+    }
+
+    private void cleanTempFileCache(){
+        RMapCache<String,Map<String, String>> tempFileCache = redissonClient.getMapCache(FILE_PREVIEW_TEMP_FILE_KEY);
+        tempFileCache.clear();
+    }
+
+    @Override
+    public void putTempFileCache(String key, Map<String, String> value) {
+        RMapCache<String,Map<String, String>> tempFileCache = redissonClient.getMapCache(FILE_PREVIEW_TEMP_FILE_KEY);
+        tempFileCache.fastPut(key,value);
+    }
+
+    @Override
+    public Map<String, String> getTempFileCache(String key) {
+        RMapCache<String,Map<String, String>> tempFileCache = redissonClient.getMapCache(FILE_PREVIEW_TEMP_FILE_KEY);
+        return tempFileCache.get(key);
+    }
+
+    @Override
+    public void initTempFileCache(Integer capacity) {
+        //nothing
     }
 }

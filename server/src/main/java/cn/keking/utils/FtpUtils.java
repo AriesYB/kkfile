@@ -55,4 +55,16 @@ public class FtpUtils {
         ftpClient.logout();
         ftpClient.disconnect();
     }
+
+    public static long lastModified(String ftpUrl, String ftpUsername, String ftpPassword, String ftpControlEncoding) throws IOException {
+        URL url = new URL(ftpUrl);
+        String host = url.getHost();
+        int port = (url.getPort() == -1) ? url.getDefaultPort() : url.getPort();
+        FTPClient client = connect(host, port, StringUtils.isEmpty(ftpUsername) ? ConfigConstants.getFtpUsername() : ftpUsername, StringUtils.isEmpty(ftpPassword) ? ConfigConstants.getFtpPassword() : ftpPassword, StringUtils.isEmpty(ftpControlEncoding) ? ConfigConstants.getFtpControlEncoding() : ftpControlEncoding);
+        long time = client.listFiles(url.getPath())[0].getTimestamp().getTimeInMillis();
+        client.logout();
+        client.disconnect();
+        //GMT时间需要加8小时
+        return time + 8 * 60 * 60 * 1000;
+    }
 }
