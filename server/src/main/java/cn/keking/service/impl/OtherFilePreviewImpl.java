@@ -47,5 +47,8 @@ public class OtherFilePreviewImpl implements FilePreview {
         return NOT_SUPPORTED_FILE_PAGE;
     }
 
-
+    @Override
+    public boolean preload(FileAttribute fileAttribute) {
+        return false;
+    }
 }

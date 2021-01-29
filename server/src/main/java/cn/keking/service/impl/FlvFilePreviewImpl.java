@@ -24,4 +24,9 @@ public class FlvFilePreviewImpl implements FilePreview {
         mediaFilePreview.filePreviewHandle(url,model,fileAttribute);
         return FLV_FILE_PREVIEW_PAGE;
     }
+
+    @Override
+    public boolean preload(FileAttribute fileAttribute) {
+        return mediaFilePreview.preload(fileAttribute);
+    }
 }

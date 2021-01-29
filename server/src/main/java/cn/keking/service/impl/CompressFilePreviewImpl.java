@@ -64,4 +64,35 @@ public class CompressFilePreviewImpl implements FilePreview {
             return otherFilePreview.notSupportedFile(model, fileAttribute, "压缩文件类型不受支持，尝试在压缩的时候选择RAR4格式");
         }
     }
+
+    @Override
+    public boolean preload(FileAttribute fileAttribute) {
+        //预加载只需要：下载、解压出来
+        String fileName = fileAttribute.getName();
+        //获取临时文件
+        String filePath = DownloadUtils.getAvailableTempFilePath(fileAttribute);
+        //没有临时文件或者临时文件未转化时进行转换
+        if (filePath == null || fileHandlerService.getConvertedFile(fileName) == null) {
+            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, fileName);
+            if (response.isFailure()) {
+                return false;
+            }
+            filePath = response.getContent();
+            String suffix = fileAttribute.getSuffix();
+            String fileTree = null;
+            if ("zip".equalsIgnoreCase(suffix) || "jar".equalsIgnoreCase(suffix) || "gzip".equalsIgnoreCase(suffix)) {
+                fileTree = compressFileReader.readZipFile(filePath, fileName);
+            } else if ("rar".equalsIgnoreCase(suffix)) {
+                fileTree = compressFileReader.unRar(filePath, fileName);
+            } else if ("7z".equalsIgnoreCase(suffix)) {
+                fileTree = compressFileReader.read7zFile(filePath, fileName);
+            }
+            if (fileTree != null && !"null".equals(fileTree) && ConfigConstants.isCacheEnabled()) {
+                fileHandlerService.addConvertedFile(fileName, fileTree);
+                return true;
+            }
+            return false;
+        }
+        return true;
+    }
 }

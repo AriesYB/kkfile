@@ -23,4 +23,9 @@ public class XmlFilePreviewImpl implements FilePreview {
         simTextFilePreview.filePreviewHandle(url, model, fileAttribute);
         return XML_FILE_PREVIEW_PAGE;
     }
+
+    @Override
+    public boolean preload(FileAttribute fileAttribute) {
+        return simTextFilePreview.preload(fileAttribute);
+    }
 }

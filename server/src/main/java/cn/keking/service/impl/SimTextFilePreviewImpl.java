@@ -49,4 +49,18 @@ public class SimTextFilePreviewImpl implements FilePreview {
         return TXT_FILE_PREVIEW_PAGE;
     }
 
+    @Override
+    public boolean preload(FileAttribute fileAttribute) {
+        //简单文本预加载：下载
+        //获取临时文件
+        String filePath = DownloadUtils.getAvailableTempFilePath(fileAttribute);
+        if (filePath == null) {
+            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, fileAttribute.getName());
+            if (response.isFailure()) {
+                return false;
+            }
+            filePath = response.getContent();
+        }
+        return filePath != null;
+    }
 }

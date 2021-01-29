@@ -69,5 +69,32 @@ public class CadFilePreviewImpl implements FilePreview {
         return PDF_FILE_PREVIEW_PAGE;
     }
 
-
+    @Override
+    public boolean preload(FileAttribute fileAttribute) {
+        //预加载分为三步：下载、转换为pdf、pdf转图片
+        String fileName = fileAttribute.getName();
+        String pdfName = fileName.substring(0, fileName.lastIndexOf(".") + 1) + "pdf";
+        String outFilePath = FILE_DIR + pdfName;
+        //获取临时文件
+        String filePath = DownloadUtils.getAvailableTempFilePath(fileAttribute);
+        //没有临时文件或者临时文件未转化时进行转换
+        if (filePath == null || fileHandlerService.getConvertedFile(pdfName) == null) {
+            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, null);
+            if (response.isFailure()) {
+                return false;
+            }
+            filePath = response.getContent();
+            if (StringUtils.hasText(outFilePath)) {
+                boolean convertResult = fileHandlerService.cadToPdf(filePath, outFilePath);
+                if (!convertResult) {
+                    return false;
+                }
+                if (ConfigConstants.isCacheEnabled()) {
+                    // 加入缓存
+                    fileHandlerService.addConvertedFile(pdfName, fileHandlerService.getRelativePath(outFilePath));
+                }
+            }
+        }
+        return true;
+    }
 }

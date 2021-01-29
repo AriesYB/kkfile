@@ -88,4 +88,42 @@ public class OfficeFilePreviewImpl implements FilePreview {
             return PICTURE_FILE_PREVIEW_PAGE;
         }
     }
+
+    @Override
+    public boolean preload(FileAttribute fileAttribute) {
+        //office文件预加载分为两种：(下载、转换为pdf、转换为图片)/(下载、转换为html)
+        String baseUrl = BaseUrlFilter.getBaseUrl();
+        String suffix = fileAttribute.getSuffix();
+        String fileName = fileAttribute.getName();
+        boolean isHtml = suffix.equalsIgnoreCase("xls") || suffix.equalsIgnoreCase("xlsx");
+        String pdfName = fileName.substring(0, fileName.lastIndexOf(".") + 1) + (isHtml ? "html" : "pdf");
+        String outFilePath = FILE_DIR + pdfName;
+        //获取临时文件
+        String filePath = DownloadUtils.getAvailableTempFilePath(fileAttribute);
+        //没有临时文件或者临时文件未转化时进行转换
+        if (filePath == null || fileHandlerService.getConvertedFile(fileName) == null) {
+            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, null);
+            if (response.isFailure()) {
+                return false;
+            }
+            filePath = response.getContent();
+            if (StringUtils.hasText(outFilePath)) {
+                officeToPdfService.openOfficeToPDF(filePath, outFilePath);
+                if (isHtml) {
+                    // 对转换后的文件进行操作(改变编码方式)
+                    fileHandlerService.doActionConvertedFile(outFilePath);
+                }
+                if (ConfigConstants.isCacheEnabled()) {
+                    // 加入缓存
+                    fileHandlerService.addConvertedFile(pdfName, fileHandlerService.getRelativePath(outFilePath));
+                }
+            }
+            //此处是转化为图片的条件
+            if (!isHtml && baseUrl != null && (OFFICE_PREVIEW_TYPE_IMAGE.equals(fileAttribute.getOfficePreviewType()) || OFFICE_PREVIEW_TYPE_ALL_IMAGES.equals(fileAttribute.getOfficePreviewType()))) {
+                List<String> imageUrls = fileHandlerService.pdf2jpg(outFilePath, pdfName, baseUrl);
+                return imageUrls != null && imageUrls.size() >= 1;
+            }
+        }
+        return true;
+    }
 }

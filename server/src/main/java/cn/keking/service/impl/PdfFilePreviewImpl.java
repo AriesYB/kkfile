@@ -93,4 +93,30 @@ public class PdfFilePreviewImpl implements FilePreview {
         }
         return PDF_FILE_PREVIEW_PAGE;
     }
+
+
+    @Override
+    public boolean preload(FileAttribute fileAttribute) {
+        //pdf文件预加载：下载、转换为图片
+        String fileName = fileAttribute.getName();
+        String baseUrl = BaseUrlFilter.getBaseUrl();
+        String pdfName = fileName.substring(0, fileName.lastIndexOf(".") + 1) + "pdf";
+        //获取临时文件
+        String filePath = DownloadUtils.getAvailableTempFilePath(fileAttribute);
+        //没有临时文件或者临时文件未转化时进行转换
+        if (filePath == null || fileHandlerService.getConvertedFile(pdfName) == null) {
+            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, fileName);
+            if (response.isFailure()) {
+                return false;
+            }
+            filePath = response.getContent();
+            if (ConfigConstants.isCacheEnabled()) {
+                // 加入缓存
+                fileHandlerService.addConvertedFile(pdfName, fileHandlerService.getRelativePath(filePath));
+            }
+        }
+        //此方法会获取已转换的图片缓存
+        List<String> imageUrls = fileHandlerService.pdf2jpg(filePath, pdfName, baseUrl);
+        return imageUrls != null && imageUrls.size() >= 1;
+    }
 }

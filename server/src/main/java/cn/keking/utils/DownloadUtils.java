@@ -148,7 +148,7 @@ public class DownloadUtils {
                     File file = new File(filePath);
                     //判断临时文件是否存在
                     if (file.exists()) {
-                        logger.debug("url={}的临时文件存在，{}!",fileAttribute.getUrl(),filePath);
+                        logger.debug("url={}的临时文件存在，{}!", fileAttribute.getUrl(), filePath);
                         return filePath;
                     }
                     logger.debug("临时文件{}不存在!", filePath);

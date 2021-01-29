@@ -24,4 +24,9 @@ public class MarkdownFilePreviewImpl implements FilePreview {
          simTextFilePreview.filePreviewHandle(url, model, fileAttribute);
          return MARKDOWN_FILE_PREVIEW_PAGE;
     }
+
+    @Override
+    public boolean preload(FileAttribute fileAttribute) {
+        return simTextFilePreview.preload(fileAttribute);
+    }
 }

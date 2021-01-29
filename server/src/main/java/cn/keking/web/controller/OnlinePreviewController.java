@@ -13,12 +13,11 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -64,7 +63,6 @@ public class OnlinePreviewController {
                 fileId = new String(Base64.decodeBase64(fileId));
                 fileUrl = fileInfoService.getFileUrlByIdAndStatus(fileId);
                 if (fileUrl == null) {
-                    logger.error("文件fileId={}不存在", fileId);
                     model.addAttribute("msg", "未查询到文件记录!");
                     return FilePreview.FILE_NOT_FOUND_PAGE;
                 }
@@ -137,6 +135,38 @@ public class OnlinePreviewController {
         logger.info("添加转码队列url：{}", url);
         cacheService.addQueueTask(url);
         return "success";
+    }
+
+    /**
+     * 预加载某个文件
+     *
+     * @param url    需要预览的文件url
+     * @param fileId 需要预览的文件id
+     * @return {@link ResponseEntity}
+     */
+    @GetMapping("/preload")
+    @ResponseBody
+    public ResponseEntity<Boolean> preload(@RequestParam(value = "url", required = false) String url, @RequestParam(value = "fileId", required = false) String fileId, HttpServletRequest req) {
+        //获得文件url
+        String fileUrl = "";
+        try {
+            if (url != null) {
+                fileUrl = new String(Base64.decodeBase64(url));
+            } else if (fileId != null) {
+                fileId = new String(Base64.decodeBase64(fileId));
+                fileUrl = fileInfoService.getFileUrlByIdAndStatus(fileId);
+                if (fileUrl == null) {
+                    return ResponseEntity.ok(false);
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return ResponseEntity.ok(false);
+        }
+        //根据url获得文件属性
+        FileAttribute fileAttribute = fileHandlerService.getFileAttribute(fileUrl, req);
+        FilePreview filePreview = previewFactory.get(fileAttribute);
+        return ResponseEntity.ok(filePreview.preload(fileAttribute));
     }
 
 }

@@ -47,5 +47,18 @@ public class MediaFilePreviewImpl implements FilePreview {
         return MEDIA_FILE_PREVIEW_PAGE;
     }
 
-
+    @Override
+    public boolean preload(FileAttribute fileAttribute) {
+        //媒体文件预加载只需要下载到临时文件目录
+        //获取临时文件
+        String filePath = DownloadUtils.getAvailableTempFilePath(fileAttribute);
+        if (filePath == null) {
+            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, fileAttribute.getName());
+            if (response.isFailure()) {
+                return false;
+            }
+            filePath = response.getContent();
+        }
+        return filePath != null;
+    }
 }

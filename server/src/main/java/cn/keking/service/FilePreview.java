@@ -23,4 +23,11 @@ public interface FilePreview {
     String FILE_NOT_FOUND_PAGE = "fileNotFound";
 
     String filePreviewHandle(String url, Model model, FileAttribute fileAttribute);
+    /**
+    * 预加载文件
+    *
+    * @param fileAttribute 文件属性
+    * @return {@link boolean} 是否加载成功
+    */
+    boolean preload(FileAttribute fileAttribute);
 }
