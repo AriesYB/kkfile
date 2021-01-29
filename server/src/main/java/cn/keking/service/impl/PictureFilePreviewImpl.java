@@ -2,12 +2,13 @@ package cn.keking.service.impl;
 
 import cn.keking.model.FileAttribute;
 import cn.keking.model.ReturnResponse;
+import cn.keking.service.FileHandlerService;
 import cn.keking.service.FilePreview;
 import cn.keking.utils.DownloadUtils;
-import cn.keking.service.FileHandlerService;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import org.springframework.util.CollectionUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,11 +33,20 @@ public class PictureFilePreviewImpl implements FilePreview {
         imgUrls.add(url);
         String fileKey = fileAttribute.getFileKey();
         List<String> zipImgUrls = fileHandlerService.getImgCache(fileKey);
+        //压缩包内图片
         if (!CollectionUtils.isEmpty(zipImgUrls)) {
             imgUrls.addAll(zipImgUrls);
         }
-        // 不是http开头，浏览器不能直接访问，需下载到本地
-        if (url != null && !url.toLowerCase().startsWith("http")) {
+        String filePath = DownloadUtils.getAvailableTempFilePath(fileAttribute);
+        //说明该文件是(http、file、ftp)预加载或者(file、ftp)已经下载过了
+        if (filePath != null) {
+            String file = fileHandlerService.getRelativePath(filePath);
+            imgUrls.clear();
+            imgUrls.add(file);
+            model.addAttribute("imgUrls", imgUrls);
+            model.addAttribute("currentUrl", file);
+        } else if (url != null && !url.toLowerCase().startsWith("http")) {
+            // 不是http开头，浏览器不能直接访问，需下载到本地
             ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, null);
             if (response.isFailure()) {
                 return otherFilePreview.notSupportedFile(model, fileAttribute, response.getMsg());

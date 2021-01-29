@@ -29,12 +29,17 @@ public class SimTextFilePreviewImpl implements FilePreview {
     @Override
     public String filePreviewHandle(String url, Model model, FileAttribute fileAttribute) {
         String fileName = fileAttribute.getName();
-        ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, fileName);
-        if (response.isFailure()) {
-            return otherFilePreview.notSupportedFile(model, fileAttribute, response.getMsg());
+        //获取临时文件
+        String filePath = DownloadUtils.getAvailableTempFilePath(fileAttribute);
+        if (filePath == null) {
+            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, fileName);
+            if (response.isFailure()) {
+                return otherFilePreview.notSupportedFile(model, fileAttribute, response.getMsg());
+            }
+            filePath = response.getContent();
         }
         try {
-            File originFile = new File(response.getContent());
+            File originFile = new File(filePath);
             String charset = KkFileUtils.getFileEncode(originFile);
             String fileData = FileUtils.readFileToString(originFile, charset);
             model.addAttribute("textData", Base64.encodeBase64String(fileData.getBytes()));

@@ -89,6 +89,7 @@ public class DownloadUtils {
                 map.put(CacheService.TEMP_FILE_NAME_KEY, realPath.substring(fileDir.length()));
                 map.put(CacheService.SOURCE_FILE_MODIFIED_TIME_KEY, sourceModifiedTime);
                 DOWNLOAD_UTILS.cacheService.putTempFileCache(fileAttribute.getName(), map);
+                //清理转换后的缓存
                 DOWNLOAD_UTILS.cacheService.cleanConvertedCache(fileAttribute.getName());
             }
             response.setContent(realPath);
@@ -130,4 +131,33 @@ public class DownloadUtils {
         return realPath;
     }
 
+    /**
+     * 获取可用的临时文件路径，可用代表拥有以及最新。
+     *
+     * @param fileAttribute 文件属性
+     * @return 临时文件路径；null->临时文件不可用
+     */
+    public static String getAvailableTempFilePath(FileAttribute fileAttribute) {
+        String tempFileName = DOWNLOAD_UTILS.cacheService.getTempFileName(fileAttribute.getName());
+        if (tempFileName != null) {
+            String modifiedTimeCache = DOWNLOAD_UTILS.cacheService.getTempFileSourceUpdateTime(fileAttribute.getName());
+            try {
+                //缓存不为空并且修改时间一致说明该临时文件可用
+                if (StringUtils.isNotEmpty(modifiedTimeCache) && modifiedTimeCache.equals(KkFileUtils.getFileModifiedTime(WebUtils.normalizedURL(fileAttribute.getUrl())))) {
+                    String filePath = fileDir + tempFileName;
+                    File file = new File(filePath);
+                    //判断临时文件是否存在
+                    if (file.exists()) {
+                        logger.debug("url={}的临时文件存在，{}!",fileAttribute.getUrl(),filePath);
+                        return filePath;
+                    }
+                    logger.debug("临时文件{}不存在!", filePath);
+                }
+            } catch (IOException | GalimatiasParseException e) {
+                logger.error(e.getMessage(), e);
+                return null;
+            }
+        }
+        return null;
+    }
 }
