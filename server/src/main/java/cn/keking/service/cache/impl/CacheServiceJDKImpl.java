@@ -1,5 +1,6 @@
 package cn.keking.service.cache.impl;
 
+import cn.keking.config.ConfigConstants;
 import cn.keking.service.cache.CacheService;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.googlecode.concurrentlinkedhashmap.Weighers;
@@ -136,5 +137,12 @@ public class CacheServiceJDKImpl implements CacheService {
     @Override
     public void initTempFileCache(Integer capacity) {
         tempFileCache = new ConcurrentLinkedHashMap.Builder<String,Map<String,String>>().maximumWeightedCapacity(capacity).weigher(Weighers.singleton()).build();
+    }
+
+    @Override
+    public void cleanConvertedCache(String key) {
+        pdfCache.remove(key);
+        pdfImagesCache.remove(ConfigConstants.getFileDir()+key);
+        imgCache.remove(key);
     }
 }

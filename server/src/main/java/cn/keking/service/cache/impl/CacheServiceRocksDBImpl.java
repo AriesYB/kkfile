@@ -256,4 +256,9 @@ public class CacheServiceRocksDBImpl implements CacheService {
     public void initTempFileCache(Integer capacity) {
         //未使用
     }
+
+    @Override
+    public void cleanConvertedCache(String key) {
+        //未使用
+    }
 }

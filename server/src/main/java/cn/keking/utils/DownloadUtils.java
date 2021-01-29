@@ -89,6 +89,7 @@ public class DownloadUtils {
                 map.put(CacheService.TEMP_FILE_NAME_KEY, realPath.substring(fileDir.length()));
                 map.put(CacheService.SOURCE_FILE_MODIFIED_TIME_KEY, sourceModifiedTime);
                 DOWNLOAD_UTILS.cacheService.putTempFileCache(fileAttribute.getName(), map);
+                DOWNLOAD_UTILS.cacheService.cleanConvertedCache(fileAttribute.getName());
             }
             response.setContent(realPath);
             response.setMsg(fileName);

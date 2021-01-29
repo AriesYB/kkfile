@@ -1,5 +1,6 @@
 package cn.keking.service.cache.impl;
 
+import cn.keking.config.ConfigConstants;
 import cn.keking.service.cache.CacheService;
 import org.redisson.Redisson;
 import org.redisson.api.RBlockingQueue;
@@ -135,5 +136,15 @@ public class CacheServiceRedisImpl implements CacheService {
     @Override
     public void initTempFileCache(Integer capacity) {
         //nothing
+    }
+
+    @Override
+    public void cleanConvertedCache(String key) {
+        RMapCache<String,Map<String, String>> pdfCache = redissonClient.getMapCache(FILE_PREVIEW_PDF_KEY);
+        RMapCache<String,Map<String, String>> pdfImgCache = redissonClient.getMapCache(FILE_PREVIEW_PDF_IMGS_KEY);
+        RMapCache<String,Map<String, String>> imgCache = redissonClient.getMapCache(FILE_PREVIEW_IMGS_KEY);
+        pdfCache.remove(key);
+        pdfImgCache.remove(ConfigConstants.getFileDir() + key);
+        imgCache.remove(key);
     }
 }

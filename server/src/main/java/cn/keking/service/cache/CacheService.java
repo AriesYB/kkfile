@@ -86,4 +86,11 @@ public interface CacheService {
         }
         return map.get(SOURCE_FILE_MODIFIED_TIME_KEY);
     }
+
+    /**
+    * 清理转换过的文件缓存
+    *
+    * @param key key
+    */
+    void cleanConvertedCache(String key);
 }
