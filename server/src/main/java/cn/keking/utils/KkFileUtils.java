@@ -5,6 +5,8 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
@@ -178,6 +180,17 @@ public class KkFileUtils {
         if (isHttpUrl(url)) {
             //发起head请求获取文件修改时间
             RestTemplate restTemplate = new RestTemplate();
+            restTemplate.setErrorHandler(new ResponseErrorHandler() {
+                @Override
+                public boolean hasError(ClientHttpResponse response) {
+                    return true;
+                }
+
+                @Override
+                public void handleError(ClientHttpResponse response) {
+                    //不做处理，即遇到请求错误时不抛出异常，而返回状态码错误结果等
+                }
+            });
             HttpHeaders headers = restTemplate.headForHeaders(url.toString());
             return String.valueOf(headers.getLastModified());
         } else if (isFileUrl(url)) {
