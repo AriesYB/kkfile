@@ -41,7 +41,7 @@ public class CacheServiceJDKImpl implements CacheService {
     }
 
     @Override
-    public void putPDFCache(String key, String value) {
+    public void putConvertedCache(String key, String value) {
         pdfCache.put(key, value);
     }
 
@@ -51,12 +51,12 @@ public class CacheServiceJDKImpl implements CacheService {
     }
 
     @Override
-    public Map<String, String> getPDFCache() {
+    public Map<String, String> getConvertedCache() {
         return pdfCache;
     }
 
     @Override
-    public String getPDFCache(String key) {
+    public String getConvertedCache(String key) {
         return pdfCache.get(key);
     }
 

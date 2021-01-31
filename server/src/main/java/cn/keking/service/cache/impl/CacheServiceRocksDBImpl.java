@@ -40,9 +40,9 @@ public class CacheServiceRocksDBImpl implements CacheService {
     {
         try {
             db = RocksDB.open(DB_PATH);
-            if (db.get(FILE_PREVIEW_PDF_KEY.getBytes()) == null) {
+            if (db.get(FILE_PREVIEW_FILE_KEY.getBytes()) == null) {
                 Map<String, String> initPDFCache = new HashMap<>();
-                db.put(FILE_PREVIEW_PDF_KEY.getBytes(), toByteArray(initPDFCache));
+                db.put(FILE_PREVIEW_FILE_KEY.getBytes(), toByteArray(initPDFCache));
             }
             if (db.get(FILE_PREVIEW_IMGS_KEY.getBytes()) == null) {
                 Map<String, List<String>> initIMGCache = new HashMap<>();
@@ -74,11 +74,11 @@ public class CacheServiceRocksDBImpl implements CacheService {
     }
 
     @Override
-    public void putPDFCache(String key, String value) {
+    public void putConvertedCache(String key, String value) {
         try {
-            Map<String, String> pdfCacheItem = getPDFCache();
+            Map<String, String> pdfCacheItem = getConvertedCache();
             pdfCacheItem.put(key, value);
-            db.put(FILE_PREVIEW_PDF_KEY.getBytes(), toByteArray(pdfCacheItem));
+            db.put(FILE_PREVIEW_FILE_KEY.getBytes(), toByteArray(pdfCacheItem));
         } catch (RocksDBException | IOException e) {
             LOGGER.error("Put into RocksDB Exception" + e);
         }
@@ -97,10 +97,10 @@ public class CacheServiceRocksDBImpl implements CacheService {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Map<String, String> getPDFCache() {
+    public Map<String, String> getConvertedCache() {
         Map<String, String> result = new HashMap<>();
-        try{
-            result = (Map<String, String>) toObject(db.get(FILE_PREVIEW_PDF_KEY.getBytes()));
+        try {
+            result = (Map<String, String>) toObject(db.get(FILE_PREVIEW_FILE_KEY.getBytes()));
         } catch (RocksDBException | IOException | ClassNotFoundException e) {
             LOGGER.error("Get from RocksDB Exception" + e);
         }
@@ -109,10 +109,10 @@ public class CacheServiceRocksDBImpl implements CacheService {
 
     @Override
     @SuppressWarnings("unchecked")
-    public String getPDFCache(String key) {
+    public String getConvertedCache(String key) {
         String result = "";
-        try{
-            Map<String, String> map = (Map<String, String>) toObject(db.get(FILE_PREVIEW_PDF_KEY.getBytes()));
+        try {
+            Map<String, String> map = (Map<String, String>) toObject(db.get(FILE_PREVIEW_FILE_KEY.getBytes()));
             result = map.get(key);
         } catch (RocksDBException | IOException | ClassNotFoundException e) {
             LOGGER.error("Get from RocksDB Exception" + e);
@@ -228,7 +228,7 @@ public class CacheServiceRocksDBImpl implements CacheService {
 
     private void cleanPdfCache() throws IOException, RocksDBException {
         Map<String, String> initPDFCache = new HashMap<>();
-        db.put(FILE_PREVIEW_PDF_KEY.getBytes(), toByteArray(initPDFCache));
+        db.put(FILE_PREVIEW_FILE_KEY.getBytes(), toByteArray(initPDFCache));
     }
 
     private void cleanImgCache() throws IOException, RocksDBException {

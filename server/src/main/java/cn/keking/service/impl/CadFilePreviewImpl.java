@@ -58,7 +58,7 @@ public class CadFilePreviewImpl implements FilePreview {
                 }
                 if (ConfigConstants.isCacheEnabled()) {
                     // 加入缓存
-                    fileHandlerService.addConvertedFile(pdfName, fileHandlerService.getRelativePath(outFilePath));
+                    fileHandlerService.addConvertedFile(fileName, pdfName);
                 }
             }
         }
@@ -91,7 +91,7 @@ public class CadFilePreviewImpl implements FilePreview {
                 }
                 if (ConfigConstants.isCacheEnabled()) {
                     // 加入缓存
-                    fileHandlerService.addConvertedFile(pdfName, fileHandlerService.getRelativePath(outFilePath));
+                    fileHandlerService.addConvertedFile(fileName, pdfName);
                 }
             }
         }

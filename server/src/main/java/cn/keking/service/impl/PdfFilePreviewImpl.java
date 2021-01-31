@@ -51,7 +51,7 @@ public class PdfFilePreviewImpl implements FilePreview {
             if (!fileHandlerService.listConvertedFiles().containsKey(pdfName) || !ConfigConstants.isCacheEnabled()) {
                 if (ConfigConstants.isCacheEnabled()) {
                     // 加入缓存
-                    fileHandlerService.addConvertedFile(pdfName, fileHandlerService.getRelativePath(outFilePath));
+                    fileHandlerService.addConvertedFile(fileName, pdfName);
                 }
             }
             //此方法会获取已转换的图片缓存
@@ -82,7 +82,7 @@ public class PdfFilePreviewImpl implements FilePreview {
                     model.addAttribute("pdfUrl", fileHandlerService.getRelativePath(response.getContent()));
                     if (ConfigConstants.isCacheEnabled()) {
                         // 加入缓存
-                        fileHandlerService.addConvertedFile(pdfName, fileHandlerService.getRelativePath(outFilePath));
+                        fileHandlerService.addConvertedFile(fileName, pdfName);
                     }
                 } else {
                     model.addAttribute("pdfUrl", pdfName);
@@ -112,7 +112,7 @@ public class PdfFilePreviewImpl implements FilePreview {
             filePath = response.getContent();
             if (ConfigConstants.isCacheEnabled()) {
                 // 加入缓存
-                fileHandlerService.addConvertedFile(pdfName, fileHandlerService.getRelativePath(filePath));
+                fileHandlerService.addConvertedFile(fileName, pdfName);
             }
         }
         //此方法会获取已转换的图片缓存

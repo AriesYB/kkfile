@@ -64,7 +64,7 @@ public class OfficeFilePreviewImpl implements FilePreview {
                 }
                 if (ConfigConstants.isCacheEnabled()) {
                     // 加入缓存
-                    fileHandlerService.addConvertedFile(pdfName, fileHandlerService.getRelativePath(outFilePath));
+                    fileHandlerService.addConvertedFile(fileName, pdfName);
                 }
             }
         }
@@ -115,7 +115,7 @@ public class OfficeFilePreviewImpl implements FilePreview {
                 }
                 if (ConfigConstants.isCacheEnabled()) {
                     // 加入缓存
-                    fileHandlerService.addConvertedFile(pdfName, fileHandlerService.getRelativePath(outFilePath));
+                    fileHandlerService.addConvertedFile(fileName, pdfName);
                 }
             }
             //此处是转化为图片的条件

@@ -2,6 +2,7 @@ package cn.keking.service.cache.impl;
 
 import cn.keking.config.ConfigConstants;
 import cn.keking.service.cache.CacheService;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
 import org.redisson.api.RBlockingQueue;
 import org.redisson.api.RMapCache;
@@ -18,6 +19,7 @@ import java.util.Map;
  * @time: 2019/4/2 18:02
  * @description
  */
+@Slf4j
 @ConditionalOnExpression("'${cache.type:default}'.equals('redis')")
 @Service
 public class CacheServiceRedisImpl implements CacheService {
@@ -36,8 +38,8 @@ public class CacheServiceRedisImpl implements CacheService {
     public void initPdfImagesCachePool(Integer capacity) { }
 
     @Override
-    public void putPDFCache(String key, String value) {
-        RMapCache<String, String> convertedList = redissonClient.getMapCache(FILE_PREVIEW_PDF_KEY);
+    public void putConvertedCache(String key, String value) {
+        RMapCache<String, String> convertedList = redissonClient.getMapCache(FILE_PREVIEW_FILE_KEY);
         convertedList.fastPut(key, value);
     }
 
@@ -48,13 +50,13 @@ public class CacheServiceRedisImpl implements CacheService {
     }
 
     @Override
-    public Map<String, String> getPDFCache() {
-        return redissonClient.getMapCache(FILE_PREVIEW_PDF_KEY);
+    public Map<String, String> getConvertedCache() {
+        return redissonClient.getMapCache(FILE_PREVIEW_FILE_KEY);
     }
 
     @Override
-    public String getPDFCache(String key) {
-        RMapCache<String, String> convertedList = redissonClient.getMapCache(FILE_PREVIEW_PDF_KEY);
+    public String getConvertedCache(String key) {
+        RMapCache<String, String> convertedList = redissonClient.getMapCache(FILE_PREVIEW_FILE_KEY);
         return convertedList.get(key);
     }
 
@@ -102,7 +104,7 @@ public class CacheServiceRedisImpl implements CacheService {
     }
 
     private void cleanPdfCache() {
-        RMapCache<String, String> pdfCache = redissonClient.getMapCache(FILE_PREVIEW_PDF_KEY);
+        RMapCache<String, String> pdfCache = redissonClient.getMapCache(FILE_PREVIEW_FILE_KEY);
         pdfCache.clear();
     }
 

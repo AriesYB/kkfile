@@ -55,14 +55,14 @@ public class FileHandlerService {
      * @return 已转换过的文件集合(缓存)
      */
     public Map<String, String> listConvertedFiles() {
-        return cacheService.getPDFCache();
+        return cacheService.getConvertedCache();
     }
 
     /**
      * @return 已转换过的文件，根据文件名获取
      */
     public String getConvertedFile(String key) {
-        return cacheService.getPDFCache(key);
+        return cacheService.getConvertedCache(key);
     }
 
     /**
@@ -95,13 +95,13 @@ public class FileHandlerService {
     }
 
     /**
-     * 添加转换后PDF缓存
+     * 添加转换后文件缓存
      *
-     * @param fileName pdf文件名
+     * @param fileName 源文件名
      * @param value    缓存相对路径
      */
     public void addConvertedFile(String fileName, String value) {
-        cacheService.putPDFCache(fileName, value);
+        cacheService.putConvertedCache(fileName, value);
     }
 
     /**
