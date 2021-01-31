@@ -99,24 +99,26 @@ public class PdfFilePreviewImpl implements FilePreview {
     public boolean preload(FileAttribute fileAttribute) {
         //pdf文件预加载：下载、转换为图片
         String fileName = fileAttribute.getName();
-        String baseUrl = BaseUrlFilter.getBaseUrl();
         String pdfName = fileName.substring(0, fileName.lastIndexOf(".") + 1) + "pdf";
         //获取临时文件
         String filePath = DownloadUtils.getAvailableTempFilePath(fileAttribute);
-        //没有临时文件或者临时文件未转化时进行转换
-        if (filePath == null || fileHandlerService.getConvertedFile(pdfName) == null) {
-            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, fileName);
+        //没有临时文件
+        if (filePath == null) {
+            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, null);
             if (response.isFailure()) {
                 return false;
             }
             filePath = response.getContent();
+        }
+        //临时文件未转化时进行转换
+        if (fileHandlerService.getConvertedFile(fileName) == null) {
             if (ConfigConstants.isCacheEnabled()) {
                 // 加入缓存
                 fileHandlerService.addConvertedFile(fileName, pdfName);
             }
         }
         //此方法会获取已转换的图片缓存
-        List<String> imageUrls = fileHandlerService.pdf2jpg(filePath, pdfName, baseUrl);
+        List<String> imageUrls = fileHandlerService.pdf2jpg(filePath, pdfName, "");
         return imageUrls != null && imageUrls.size() >= 1;
     }
 }

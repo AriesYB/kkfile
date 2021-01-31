@@ -92,7 +92,6 @@ public class OfficeFilePreviewImpl implements FilePreview {
     @Override
     public boolean preload(FileAttribute fileAttribute) {
         //office文件预加载分为两种：(下载、转换为pdf、转换为图片)/(下载、转换为html)
-        String baseUrl = BaseUrlFilter.getBaseUrl();
         String suffix = fileAttribute.getSuffix();
         String fileName = fileAttribute.getName();
         boolean isHtml = suffix.equalsIgnoreCase("xls") || suffix.equalsIgnoreCase("xlsx");
@@ -100,13 +99,16 @@ public class OfficeFilePreviewImpl implements FilePreview {
         String outFilePath = FILE_DIR + pdfName;
         //获取临时文件
         String filePath = DownloadUtils.getAvailableTempFilePath(fileAttribute);
-        //没有临时文件或者临时文件未转化时进行转换
-        if (filePath == null || fileHandlerService.getConvertedFile(fileName) == null) {
+        //没有临时文件
+        if (filePath == null) {
             ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, null);
             if (response.isFailure()) {
                 return false;
             }
             filePath = response.getContent();
+        }
+        //临时文件未转化时进行转换
+        if (fileHandlerService.getConvertedFile(fileName) == null) {
             if (StringUtils.hasText(outFilePath)) {
                 officeToPdfService.openOfficeToPDF(filePath, outFilePath);
                 if (isHtml) {
@@ -118,9 +120,9 @@ public class OfficeFilePreviewImpl implements FilePreview {
                     fileHandlerService.addConvertedFile(fileName, pdfName);
                 }
             }
-            //此处是转化为图片的条件
-            if (!isHtml && baseUrl != null && (OFFICE_PREVIEW_TYPE_IMAGE.equals(fileAttribute.getOfficePreviewType()) || OFFICE_PREVIEW_TYPE_ALL_IMAGES.equals(fileAttribute.getOfficePreviewType()))) {
-                List<String> imageUrls = fileHandlerService.pdf2jpg(outFilePath, pdfName, baseUrl);
+            //此处是转化为图片的条件，不用判断baseUrl，因为这是/preload，不需要生成预览的url
+            if (!isHtml && (OFFICE_PREVIEW_TYPE_IMAGE.equals(fileAttribute.getOfficePreviewType()) || OFFICE_PREVIEW_TYPE_ALL_IMAGES.equals(fileAttribute.getOfficePreviewType()))) {
+                List<String> imageUrls = fileHandlerService.pdf2jpg(outFilePath, pdfName, "");
                 return imageUrls != null && imageUrls.size() >= 1;
             }
         }

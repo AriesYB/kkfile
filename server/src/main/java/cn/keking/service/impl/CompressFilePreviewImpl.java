@@ -71,13 +71,16 @@ public class CompressFilePreviewImpl implements FilePreview {
         String fileName = fileAttribute.getName();
         //获取临时文件
         String filePath = DownloadUtils.getAvailableTempFilePath(fileAttribute);
-        //没有临时文件或者临时文件未转化时进行转换
-        if (filePath == null || fileHandlerService.getConvertedFile(fileName) == null) {
-            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, fileName);
+        //没有临时文件
+        if (filePath == null) {
+            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, null);
             if (response.isFailure()) {
                 return false;
             }
             filePath = response.getContent();
+        }
+        //临时文件未转化时进行转换
+        if (fileHandlerService.getConvertedFile(fileName) == null) {
             String suffix = fileAttribute.getSuffix();
             String fileTree = null;
             if ("zip".equalsIgnoreCase(suffix) || "jar".equalsIgnoreCase(suffix) || "gzip".equalsIgnoreCase(suffix)) {

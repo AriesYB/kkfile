@@ -77,13 +77,16 @@ public class CadFilePreviewImpl implements FilePreview {
         String outFilePath = FILE_DIR + pdfName;
         //获取临时文件
         String filePath = DownloadUtils.getAvailableTempFilePath(fileAttribute);
-        //没有临时文件或者临时文件未转化时进行转换
-        if (filePath == null || fileHandlerService.getConvertedFile(pdfName) == null) {
+        //没有临时文件
+        if (filePath == null) {
             ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, null);
             if (response.isFailure()) {
                 return false;
             }
             filePath = response.getContent();
+        }
+        //临时文件未转化时进行转换
+        if (fileHandlerService.getConvertedFile(fileName) == null) {
             if (StringUtils.hasText(outFilePath)) {
                 boolean convertResult = fileHandlerService.cadToPdf(filePath, outFilePath);
                 if (!convertResult) {
