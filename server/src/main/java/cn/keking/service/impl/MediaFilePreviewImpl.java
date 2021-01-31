@@ -43,7 +43,6 @@ public class MediaFilePreviewImpl implements FilePreview {
         } else {
             model.addAttribute("mediaUrl", url);
         }
-        model.addAttribute("mediaUrl", url);
         return MEDIA_FILE_PREVIEW_PAGE;
     }
 
