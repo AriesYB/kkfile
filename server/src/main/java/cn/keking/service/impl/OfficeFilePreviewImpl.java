@@ -55,7 +55,7 @@ public class OfficeFilePreviewImpl implements FilePreview {
             filePath = response.getContent();
         }
         // 判断之前是否已转换过，如果转换过，直接返回，否则执行转换
-        if (!fileHandlerService.listConvertedFiles().containsKey(pdfName) || !ConfigConstants.isCacheEnabled()) {
+        if (!fileHandlerService.listConvertedFiles().containsKey(fileName) || !ConfigConstants.isCacheEnabled()) {
             if (StringUtils.hasText(outFilePath)) {
                 officeToPdfService.openOfficeToPDF(filePath, outFilePath);
                 if (isHtml) {

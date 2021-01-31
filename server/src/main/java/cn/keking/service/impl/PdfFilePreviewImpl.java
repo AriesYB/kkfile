@@ -48,7 +48,7 @@ public class PdfFilePreviewImpl implements FilePreview {
                 outFilePath = response.getContent();
             }
             //如果文件未转换或者未开启缓存
-            if (!fileHandlerService.listConvertedFiles().containsKey(pdfName) || !ConfigConstants.isCacheEnabled()) {
+            if (!fileHandlerService.listConvertedFiles().containsKey(fileName) || !ConfigConstants.isCacheEnabled()) {
                 if (ConfigConstants.isCacheEnabled()) {
                     // 加入缓存
                     fileHandlerService.addConvertedFile(fileName, pdfName);
@@ -74,7 +74,7 @@ public class PdfFilePreviewImpl implements FilePreview {
                 model.addAttribute("pdfUrl", fileHandlerService.getRelativePath(filePath));
             } else if (url != null && !url.toLowerCase().startsWith("http")) {
                 // 不是http开头，浏览器不能直接访问，需下载到本地
-                if (!fileHandlerService.listConvertedFiles().containsKey(pdfName) || !ConfigConstants.isCacheEnabled()) {
+                if (!fileHandlerService.listConvertedFiles().containsKey(fileName) || !ConfigConstants.isCacheEnabled()) {
                     ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, pdfName);
                     if (response.isFailure()) {
                         return otherFilePreview.notSupportedFile(model, fileAttribute, response.getMsg());
