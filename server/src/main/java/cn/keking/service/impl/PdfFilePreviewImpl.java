@@ -103,7 +103,7 @@ public class PdfFilePreviewImpl implements FilePreview {
         String filePath = DownloadUtils.getAvailableTempFilePath(fileAttribute);
         //没有临时文件
         if (filePath == null) {
-            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, null);
+            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, fileName);
             if (response.isFailure()) {
                 return false;
             }
