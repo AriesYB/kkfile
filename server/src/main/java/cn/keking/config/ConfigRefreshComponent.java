@@ -48,6 +48,7 @@ public class ConfigRefreshComponent {
                 String baseUrl;
                 String trustHost;
                 String pdfDownloadDisable;
+                String pdf2jpgDpi;
                 while (true) {
                     FileReader fileReader = new FileReader(configFilePath);
                     BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -66,6 +67,7 @@ public class ConfigRefreshComponent {
                     baseUrl = properties.getProperty("base.url", ConfigConstants.DEFAULT_BASE_URL);
                     trustHost = properties.getProperty("trust.host", ConfigConstants.DEFAULT_TRUST_HOST);
                     pdfDownloadDisable = properties.getProperty("pdf.download.disable", ConfigConstants.DEFAULT_PDF_DOWNLOAD_DISABLE);
+                    pdf2jpgDpi = properties.getProperty("pdf.jpg.dpi",ConfigConstants.DEFAULT_PDF_JPG_DPI);
                     ConfigConstants.setCacheEnabledValueValue(cacheEnabled);
                     ConfigConstants.setSimTextValue(textArray);
                     ConfigConstants.setMediaValue(mediaArray);
@@ -77,6 +79,7 @@ public class ConfigRefreshComponent {
                     ConfigConstants.setTrustHostValue(trustHost);
                     ConfigConstants.setOfficePreviewSwitchDisabledValue(officePreviewSwitchDisabled);
                     ConfigConstants.setPdfDownloadDisableValue(pdfDownloadDisable);
+                    ConfigConstants.setPdfJpgDpiValue(pdf2jpgDpi);
                     setWatermarkConfig(properties);
                     bufferedReader.close();
                     fileReader.close();

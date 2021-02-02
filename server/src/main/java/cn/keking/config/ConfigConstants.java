@@ -28,6 +28,7 @@ public class ConfigConstants {
     private static String FILE_DIR = ConfigUtils.getHomePath() + File.separator + "file" + File.separator;
     private static CopyOnWriteArraySet<String> TRUST_HOST_SET;
     private static String PDF_DOWNLOAD_DISABLE;
+    private static String PDF_JPG_DPI;
 
     public static final String DEFAULT_CACHE_ENABLED = "true";
     public static final String DEFAULT_TXT_TYPE = "txt,html,htm,asp,jsp,xml,json,properties,md,gitignore,log,java,py,c,cpp,sql,sh,bat,m,bas,prg,cmd";
@@ -41,6 +42,7 @@ public class ConfigConstants {
     public static final String DEFAULT_FILE_DIR_VALUE = "default";
     public static final String DEFAULT_TRUST_HOST = "default";
     public static final String DEFAULT_PDF_DOWNLOAD_DISABLE = "true";
+    public static final String DEFAULT_PDF_JPG_DPI= "105";
 
     public static Boolean isCacheEnabled() {
         return CACHE_ENABLED;
@@ -213,5 +215,16 @@ public class ConfigConstants {
     }
     public static void setOfficePreviewSwitchDisabledValue(String officePreviewSwitchDisabled) {
         OFFICE_PREVIEW_SWITCH_DISABLED = officePreviewSwitchDisabled;
+    }
+
+    public static int getPdfJpgDpi(){
+        return Integer.parseInt(PDF_JPG_DPI);
+    }
+    @Value("${pdf.jpg.dpi}")
+    public void setPdfJpgDpi(String defaultPdfJpgDpi){
+        setPdfJpgDpiValue(defaultPdfJpgDpi);
+    }
+    public static void setPdfJpgDpiValue(String defaultPdfJpgDpi){
+        PDF_JPG_DPI = defaultPdfJpgDpi;
     }
 }
