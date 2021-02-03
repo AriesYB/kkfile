@@ -22,7 +22,7 @@
 <body>
 <div class="container">
     <#list imgurls as img>
-        <div class="img-area">
+        <div class="img-area dynamic-img">
             <img class="my-photo" alt="loading"  data-src="${img}" src="images/loading.gif">
         </div>
     </#list>
@@ -31,6 +31,15 @@
     <img src="images/pdf.svg" width="63" height="63" style="position: fixed; cursor: pointer; top: 40%; right: 48px; z-index: 999;" alt="使用PDF预览" title="使用PDF预览" onclick="changePreviewType('pdf')"/>
 </#if>
 <script>
+    //当前文件名称
+    window.fileName="${file.name}"
+    //图片在后端是否转换完毕
+    window.finshed=false;
+    //图片的数量
+    window.num = "${imgurls?size}"
+    let tempUrl = "${imgurls[0]}";
+    //图片访问地址 http://localhost:8012/xxx/
+    window.imgUrl = tempUrl.substring(0,tempUrl.lastIndexOf('/')+1);
     window.onload = function () {
         /*初始化水印*/
         initWaterMark();

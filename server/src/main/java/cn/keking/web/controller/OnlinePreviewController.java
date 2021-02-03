@@ -1,5 +1,6 @@
 package cn.keking.web.controller;
 
+import cn.keking.config.ConfigConstants;
 import cn.keking.file.service.FileInfoService;
 import cn.keking.model.FileAttribute;
 import cn.keking.service.FileHandlerService;
@@ -25,7 +26,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static cn.keking.service.FilePreview.PICTURE_FILE_PREVIEW_PAGE;
 
@@ -169,4 +172,14 @@ public class OnlinePreviewController {
         return ResponseEntity.ok(filePreview.preload(fileAttribute));
     }
 
+
+    @GetMapping("/pdfImgNum")
+    @ResponseBody
+    public Map<String, Object> updateImgNum(@RequestParam("fileName") String fileName) {
+        Map<String, Object> map = new HashMap<>(2);
+        String key = ConfigConstants.getFileDir() + fileHandlerService.getConvertedFile(fileName);
+        map.put("imgNum", fileHandlerService.getConvertedPdfImage(key));
+        map.put("finished", fileHandlerService.pdf2jpgFinished(key));
+        return map;
+    }
 }

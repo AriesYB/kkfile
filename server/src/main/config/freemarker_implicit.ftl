@@ -12,7 +12,7 @@
 [#-- @ftlvariable name="markdown" type="String" --]
 [#-- @ftlvariable name="xml" type="String" --]
 [#-- @ftlvariable name="switchDisabled" type="String" --]
-[#-- @ftlvariable name="imgurls" type="String" --]
+[#-- @ftlvariable name="imgurls" type="java.util.List" --]
 [#-- @ftlvariable name="watermarkAngle" type="String" --]
 [#-- @ftlvariable name="watermarkHeight" type="String" --]
 [#-- @ftlvariable name="watermarkWidth" type="String" --]

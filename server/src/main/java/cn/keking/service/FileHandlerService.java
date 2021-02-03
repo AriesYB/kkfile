@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -26,9 +27,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author yudian-it
@@ -43,12 +42,20 @@ public class FileHandlerService {
     private static final String DEFAULT_CONVERTER_CHARSET = System.getProperty("sun.jnu.encoding");
     private final String fileDir = ConfigConstants.getFileDir();
     private final CacheService cacheService;
+    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+    private static final int PDF_2_JPG_NUM = 5;
+    /**
+     * 转换中的pdf
+     */
+    private Set<String> convertingPdf = new HashSet<>();
 
     @Value("${server.tomcat.uri-encoding:UTF-8}")
     private String uriEncoding;
 
-    public FileHandlerService(CacheService cacheService) {
+    public FileHandlerService(CacheService cacheService, ThreadPoolTaskExecutor threadPoolTaskExecutor) {
         this.cacheService = cacheService;
+        this.threadPoolTaskExecutor = threadPoolTaskExecutor;
     }
 
     /**
@@ -167,10 +174,11 @@ public class FileHandlerService {
     }
 
     /**
-     *  pdf文件转换成jpg图片集
+     * pdf文件转换成jpg图片集
+     *
      * @param pdfFilePath pdf文件路径
-     * @param pdfName pdf文件名称
-     * @param baseUrl 基础访问地址
+     * @param pdfName     pdf文件名称
+     * @param baseUrl     基础访问地址
      * @return 图片访问集合
      */
     public List<String> pdf2jpg(String pdfFilePath, String pdfName, String baseUrl) {
@@ -186,8 +194,9 @@ public class FileHandlerService {
             urlPrefix = baseUrl + pdfFolder;
         }
         if (imageCount != null && imageCount > 0) {
-            for (int i = 0; i < imageCount; i++)
+            for (int i = 0; i < imageCount; i++) {
                 imageUrls.add(urlPrefix + "/" + i + imageFileSuffix);
+            }
             return imageUrls;
         }
         try {
@@ -204,14 +213,45 @@ public class FileHandlerService {
                 logger.error("创建转换文件【{}】目录失败，请检查目录权限！", folder);
             }
             String imageFilePath;
-            for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+            int tempCount = Math.min(pageCount, PDF_2_JPG_NUM);
+            //一次性转换完毕
+            for (int pageIndex = 0; pageIndex < tempCount; pageIndex++) {
                 imageFilePath = folder + File.separator + pageIndex + imageFileSuffix;
-                BufferedImage image = pdfRenderer.renderImageWithDPI(pageIndex, 105, ImageType.RGB);
-                ImageIOUtil.writeImage(image, imageFilePath, 105);
+                BufferedImage image = pdfRenderer.renderImageWithDPI(pageIndex, ConfigConstants.getPdfJpgDpi(), ImageType.RGB);
+                ImageIOUtil.writeImage(image, imageFilePath, ConfigConstants.getPdfJpgDpi());
                 imageUrls.add(urlPrefix + "/" + pageIndex + imageFileSuffix);
             }
-            doc.close();
-            this.addConvertedPdfImage(pdfFilePath, pageCount);
+            //一次性转换完毕的直接关闭
+            if (tempCount == pageCount) {
+                addConvertedPdfImage(pdfFilePath, tempCount);
+                logger.debug("首次转换pdf-img:{}=>{}", pdfFilePath, tempCount);
+                doc.close();
+            } else {
+                //开启线程转换剩余内容
+                convertingPdf.add(pdfFilePath);
+                threadPoolTaskExecutor.submit(() -> {
+                    String imgPath;
+                    try {
+                        int pageIndex;
+                        for (pageIndex = PDF_2_JPG_NUM; pageIndex < pageCount; pageIndex++) {
+                            imgPath = folder + File.separator + pageIndex + imageFileSuffix;
+                            BufferedImage image = pdfRenderer.renderImageWithDPI(pageIndex, ConfigConstants.getPdfJpgDpi(), ImageType.RGB);
+                            ImageIOUtil.writeImage(image, imgPath, ConfigConstants.getPdfJpgDpi());
+                            //每转换若干页就更新一次缓存。
+                            if (pageIndex % PDF_2_JPG_NUM == 0) {
+                                addConvertedPdfImage(pdfFilePath, pageIndex);
+                                logger.debug("正在转换pdf-img:{}=>{}", pdfFilePath, pageIndex);
+                            }
+                        }
+                        addConvertedPdfImage(pdfFilePath, pageIndex);
+                        logger.debug("转换完毕pdf-img:{}=>{}", pdfFilePath, pageIndex);
+                        doc.close();
+                    } catch (IOException e) {
+                        logger.error("Convert pdf to jpg exception, pdfFilePath：{}", pdfFilePath, e);
+                    }
+                    convertingPdf.remove(pdfFilePath);
+                });
+            }
         } catch (IOException e) {
             logger.error("Convert pdf to jpg exception, pdfFilePath：{}", pdfFilePath, e);
         }
@@ -220,11 +260,12 @@ public class FileHandlerService {
 
     /**
      * cad文件转pdf
-     * @param inputFilePath cad文件路径
+     *
+     * @param inputFilePath  cad文件路径
      * @param outputFilePath pdf输出文件路径
      * @return 转换是否成功
      */
-    public boolean cadToPdf(String inputFilePath, String outputFilePath)  {
+    public boolean cadToPdf(String inputFilePath, String outputFilePath) {
         com.aspose.cad.Image cadImage = com.aspose.cad.Image.load(inputFilePath);
         CadRasterizationOptions cadRasterizationOptions = new CadRasterizationOptions();
         cadRasterizationOptions.setLayouts(new String[]{"Model"});
@@ -277,7 +318,7 @@ public class FileHandlerService {
         attribute.setUrl(url);
         if (req != null) {
             String officePreviewType = req.getParameter("officePreviewType");
-            String fileKey = WebUtils.getUrlParameterReg(url,"fileKey");
+            String fileKey = WebUtils.getUrlParameterReg(url, "fileKey");
             if (StringUtils.hasText(officePreviewType)) {
                 attribute.setOfficePreviewType(officePreviewType);
             }
@@ -286,5 +327,9 @@ public class FileHandlerService {
             }
         }
         return attribute;
+    }
+
+    public boolean pdf2jpgFinished(String pdfPath) {
+        return !convertingPdf.contains(pdfPath);
     }
 }
