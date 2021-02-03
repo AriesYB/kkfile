@@ -21,6 +21,10 @@ public interface CacheService {
     String FILE_PREVIEW_TEMP_FILE_KEY = "converted-preview-temp-file";
     String TEMP_FILE_NAME_KEY = "tempFile";
     String SOURCE_FILE_MODIFIED_TIME_KEY = "sourceFileModifiedTime";
+    /**
+     * 正在转换的文件
+     */
+    String FILE_PREVIEW_CONVERTING_FILE = "converted-preview-converting-file";
 
     Integer DEFAULT_PDF_CAPACITY = 500000;
     Integer DEFAULT_IMG_CAPACITY = 500000;
@@ -77,6 +81,28 @@ public interface CacheService {
      */
     void initTempFileCache(Integer capacity);
 
+    /**
+     * 增加正在转换的文件缓存
+     * @param key key
+     * @param value 将要转换的页数
+     * @return
+     */
+    boolean putConvertingFileCache(String key, Integer value);
+
+    /**
+     * 获取正在转换的文件缓存
+     * @param key key
+     * @return 正在转换的文件将要转换的页数
+     */
+    Integer getConvertingFileCache(String key);
+
+    /**
+    * 移除正在转换的文件缓存
+    * @param key key
+    */
+    void removeConvertingFileCache(String key);
+
+    void cleanConvertingFileCache();
     /**
      * 获取临时文件缓存中的临时文件名称
      *

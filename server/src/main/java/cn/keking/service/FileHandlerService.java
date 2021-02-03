@@ -45,10 +45,6 @@ public class FileHandlerService {
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     private static final int PDF_2_JPG_NUM = 5;
-    /**
-     * 转换中的pdf
-     */
-    private Set<String> convertingPdf = new HashSet<>();
 
     @Value("${server.tomcat.uri-encoding:UTF-8}")
     private String uriEncoding;
@@ -142,6 +138,43 @@ public class FileHandlerService {
     }
 
     /**
+     * 判断文件是否正在转换
+     *
+     * @param key key
+     * @return {@link String}true->正在转换;false->当前没有转换
+     */
+    public boolean isConverting(String key) {
+        return cacheService.getConvertingFileCache(key) != null;
+    }
+
+    /**
+     * 获取文件将要转换的页数
+     *
+     * @param key key
+     * @return {@link Integer}将要转换的页数
+     */
+    public Integer getConvertingFilePage(String key) {
+        return cacheService.getConvertingFileCache(key);
+    }
+
+    /**
+     * 添加正在转换的文件(指PDF转图片)
+     *
+     * @param key   pdf路径
+     * @param value 页数
+     */
+    public boolean putConvertingFile(String key, Integer value) {
+        return cacheService.putConvertingFileCache(key, value);
+    }
+    /**
+    * 移除已经转换完毕的文件
+    * @param key key
+    */
+    public void removeConvertingFile(String key){
+        cacheService.removeConvertingFileCache(key);
+    }
+
+    /**
      * 对转换后的文件进行操作(改变编码方式)
      *
      * @param outFilePath 文件绝对路径
@@ -193,18 +226,40 @@ public class FileHandlerService {
             logger.error("UnsupportedEncodingException", e);
             urlPrefix = baseUrl + pdfFolder;
         }
-        if (imageCount != null && imageCount > 0) {
-            for (int i = 0; i < imageCount; i++) {
-                imageUrls.add(urlPrefix + "/" + i + imageFileSuffix);
+        //正在转换直接返回
+        if (isConverting(pdfFilePath)) {
+            if (imageCount != null && imageCount > 0) {
+                for (int i = 0; i < imageCount; i++) {
+                    imageUrls.add(urlPrefix + "/" + i + imageFileSuffix);
+                }
+                return imageUrls;
             }
-            return imageUrls;
+        } else {
+            //没有转换。发现缓存与真正转换的图片数量一致也直接返回。
+            File dir = new File(pdfFolder);
+            if (dir.exists() && dir.list().length == imageCount) {
+                for (int i = 0; i < imageCount; i++) {
+                    imageUrls.add(urlPrefix + "/" + i + imageFileSuffix);
+                }
+                return imageUrls;
+            }
         }
         try {
+            //转换前先添加缓存。使用了锁，插值时为null才会插值成功
             File pdfFile = new File(pdfFilePath);
             PDDocument doc = PDDocument.load(pdfFile);
             int pageCount = doc.getNumberOfPages();
             PDFRenderer pdfRenderer = new PDFRenderer(doc);
-
+            boolean flag = putConvertingFile(pdfFilePath,pageCount);
+            if (!flag){
+                //准备转换当前文件，但是设置值失败，说明其他用户已经触发转换了。就返回已经转换了的内容
+                File dir = new File(pdfFolder);
+                for (int i = 0; i < dir.list().length; i++) {
+                    imageUrls.add(urlPrefix + "/" + i + imageFileSuffix);
+                }
+                doc.close();
+                return imageUrls;
+            }
             int index = pdfFilePath.lastIndexOf(".");
             String folder = pdfFilePath.substring(0, index);
 
@@ -224,11 +279,11 @@ public class FileHandlerService {
             //一次性转换完毕的直接关闭
             if (tempCount == pageCount) {
                 addConvertedPdfImage(pdfFilePath, tempCount);
-                logger.debug("首次转换pdf-img:{}=>{}", pdfFilePath, tempCount);
+                logger.debug("一次转换pdf-img:{}=>{}", pdfFilePath, tempCount);
+                removeConvertingFile(pdfFilePath);
                 doc.close();
             } else {
                 //开启线程转换剩余内容
-                convertingPdf.add(pdfFilePath);
                 threadPoolTaskExecutor.submit(() -> {
                     String imgPath;
                     try {
@@ -249,7 +304,7 @@ public class FileHandlerService {
                     } catch (IOException e) {
                         logger.error("Convert pdf to jpg exception, pdfFilePath：{}", pdfFilePath, e);
                     }
-                    convertingPdf.remove(pdfFilePath);
+                    removeConvertingFile(pdfFilePath);
                 });
             }
         } catch (IOException e) {
@@ -330,6 +385,14 @@ public class FileHandlerService {
     }
 
     public boolean pdf2jpgFinished(String pdfPath) {
-        return !convertingPdf.contains(pdfPath);
+        if(isConverting(pdfPath)){
+            return false;
+        }else {
+            File dir = new File(pdfPath.substring(0,pdfPath.lastIndexOf(".")));
+            if (dir.exists() && dir.list().length==getConvertedPdfImage(pdfPath)){
+                return true;
+            }
+        }
+        return false;
     }
 }

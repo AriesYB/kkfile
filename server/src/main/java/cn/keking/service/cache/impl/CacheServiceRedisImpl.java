@@ -5,6 +5,7 @@ import cn.keking.service.cache.CacheService;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
 import org.redisson.api.RBlockingQueue;
+import org.redisson.api.RLock;
 import org.redisson.api.RMapCache;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
@@ -31,11 +32,16 @@ public class CacheServiceRedisImpl implements CacheService {
     }
 
     @Override
-    public void initPDFCachePool(Integer capacity) { }
+    public void initPDFCachePool(Integer capacity) {
+    }
+
     @Override
-    public void initIMGCachePool(Integer capacity) { }
+    public void initIMGCachePool(Integer capacity) {
+    }
+
     @Override
-    public void initPdfImagesCachePool(Integer capacity) { }
+    public void initPdfImagesCachePool(Integer capacity) {
+    }
 
     @Override
     public void putConvertedCache(String key, String value) {
@@ -89,6 +95,7 @@ public class CacheServiceRedisImpl implements CacheService {
         cleanImgCache();
         cleanPdfImgCache();
         cleanTempFileCache();
+        cleanConvertingFileCache();
     }
 
     @Override
@@ -118,26 +125,63 @@ public class CacheServiceRedisImpl implements CacheService {
         pdfImg.clear();
     }
 
-    private void cleanTempFileCache(){
-        RMapCache<String,Map<String, String>> tempFileCache = redissonClient.getMapCache(FILE_PREVIEW_TEMP_FILE_KEY);
+    private void cleanTempFileCache() {
+        RMapCache<String, Map<String, String>> tempFileCache = redissonClient.getMapCache(FILE_PREVIEW_TEMP_FILE_KEY);
         tempFileCache.clear();
     }
 
     @Override
     public void putTempFileCache(String key, Map<String, String> value) {
-        RMapCache<String,Map<String, String>> tempFileCache = redissonClient.getMapCache(FILE_PREVIEW_TEMP_FILE_KEY);
-        tempFileCache.fastPut(key,value);
+        RMapCache<String, Map<String, String>> tempFileCache = redissonClient.getMapCache(FILE_PREVIEW_TEMP_FILE_KEY);
+        tempFileCache.fastPut(key, value);
     }
 
     @Override
     public Map<String, String> getTempFileCache(String key) {
-        RMapCache<String,Map<String, String>> tempFileCache = redissonClient.getMapCache(FILE_PREVIEW_TEMP_FILE_KEY);
+        RMapCache<String, Map<String, String>> tempFileCache = redissonClient.getMapCache(FILE_PREVIEW_TEMP_FILE_KEY);
         return tempFileCache.get(key);
     }
 
     @Override
     public void initTempFileCache(Integer capacity) {
         //nothing
+    }
+
+    @Override
+    public boolean putConvertingFileCache(String key, Integer value) {
+        RMapCache<String, Integer> convertingFileCache = redissonClient.getMapCache(FILE_PREVIEW_CONVERTING_FILE);
+        RLock lock = redissonClient.getLock("lock");
+        lock.lock();
+        try {
+            //当前值已经被设置
+            if (convertingFileCache.get(key)!=null){
+                return false;
+            }
+            convertingFileCache.fastPut(key, value);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        } finally {
+            lock.unlock();
+        }
+        return true;
+    }
+
+    @Override
+    public void removeConvertingFileCache(String key) {
+        RMapCache<String, Integer> convertingFileCache = redissonClient.getMapCache(FILE_PREVIEW_CONVERTING_FILE);
+        convertingFileCache.remove(key);
+    }
+
+    @Override
+    public Integer getConvertingFileCache(String key) {
+        RMapCache<String, Integer> convertingFileCache = redissonClient.getMapCache(FILE_PREVIEW_CONVERTING_FILE);
+        return convertingFileCache.get(key);
+    }
+
+    @Override
+    public void cleanConvertingFileCache() {
+        RMapCache<String, Integer> convertingFileCache = redissonClient.getMapCache(FILE_PREVIEW_CONVERTING_FILE);
+        convertingFileCache.clear();
     }
 
     @Override

@@ -258,6 +258,28 @@ public class CacheServiceRocksDBImpl implements CacheService {
     }
 
     @Override
+    public void cleanConvertingFileCache() {
+
+    }
+
+    @Override
+    public void removeConvertingFileCache(String key) {
+
+    }
+
+    @Override
+    public boolean putConvertingFileCache(String key, Integer value) {
+        //未使用
+        return false;
+    }
+
+    @Override
+    public Integer getConvertingFileCache(String key) {
+        //未使用
+        return null;
+    }
+
+    @Override
     public void cleanConvertedCache(String key) {
         //未使用
     }

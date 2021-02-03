@@ -29,6 +29,7 @@ public class CacheServiceJDKImpl implements CacheService {
     private Map<String, List<String>> imgCache;
     private Map<String, Integer> pdfImagesCache;
     private Map<String, Map<String, String>> tempFileCache;
+    private Map<String, Integer> convertingFileCache;
     private static final int QUEUE_SIZE = 500000;
     private final BlockingQueue<String> blockingQueue = new ArrayBlockingQueue<>(QUEUE_SIZE);
 
@@ -38,6 +39,7 @@ public class CacheServiceJDKImpl implements CacheService {
         initIMGCachePool(CacheService.DEFAULT_IMG_CAPACITY);
         initPdfImagesCachePool(CacheService.DEFAULT_PDFIMG_CAPACITY);
         initTempFileCache(CacheService.DEFAULT_TEMP_FILE_CAPACITY);
+        convertingFileCache = new ConcurrentLinkedHashMap.Builder<String,Integer>().maximumWeightedCapacity(10000).weigher(Weighers.singleton()).build();
     }
 
     @Override
@@ -137,6 +139,27 @@ public class CacheServiceJDKImpl implements CacheService {
     @Override
     public void initTempFileCache(Integer capacity) {
         tempFileCache = new ConcurrentLinkedHashMap.Builder<String,Map<String,String>>().maximumWeightedCapacity(capacity).weigher(Weighers.singleton()).build();
+    }
+
+    @Override
+    public void cleanConvertingFileCache() {
+        convertingFileCache.clear();
+    }
+
+    @Override
+    public void removeConvertingFileCache(String key) {
+        convertingFileCache.remove(key);
+    }
+
+    @Override
+    public boolean putConvertingFileCache(String key, Integer value) {
+       convertingFileCache.put(key, value);
+       return true;
+    }
+
+    @Override
+    public Integer getConvertingFileCache(String key) {
+        return convertingFileCache.get(key);
     }
 
     @Override
