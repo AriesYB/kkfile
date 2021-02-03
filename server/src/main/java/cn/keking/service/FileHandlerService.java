@@ -236,8 +236,8 @@ public class FileHandlerService {
             }
         } else {
             //没有转换。发现缓存与真正转换的图片数量一致也直接返回。
-            File dir = new File(pdfFolder);
-            if (dir.exists() && dir.list().length == imageCount) {
+            File dir = new File(fileDir+pdfFolder);
+            if (dir.exists() && imageCount!=null && dir.list().length == imageCount) {
                 for (int i = 0; i < imageCount; i++) {
                     imageUrls.add(urlPrefix + "/" + i + imageFileSuffix);
                 }
@@ -253,7 +253,7 @@ public class FileHandlerService {
             boolean flag = putConvertingFile(pdfFilePath,pageCount);
             if (!flag){
                 //准备转换当前文件，但是设置值失败，说明其他用户已经触发转换了。就返回已经转换了的内容
-                File dir = new File(pdfFolder);
+                File dir = new File(fileDir+pdfFolder);
                 for (int i = 0; i < dir.list().length; i++) {
                     imageUrls.add(urlPrefix + "/" + i + imageFileSuffix);
                 }
