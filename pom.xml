@@ -12,6 +12,11 @@
     </modules>
     <packaging>pom</packaging>
 
+    <properties>
+        <maven.test.skip>true</maven.test.skip>
+        <skipTests>true</skipTests>
+    </properties>
+
     <profiles>
         <profile>
             <id>dev</id>

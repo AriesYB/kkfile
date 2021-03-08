@@ -1,6 +1,5 @@
 package cn.keking;
 
-import com.ctrip.framework.apollo.spring.annotation.EnableApolloConfig;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -11,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableFeignClients
 @EnableScheduling
-@EnableApolloConfig
+//@EnableApolloConfig
 @ComponentScan(value = "cn.keking.*")
 @MapperScan("cn.keking.file.mapper")
 public class ServerMain {

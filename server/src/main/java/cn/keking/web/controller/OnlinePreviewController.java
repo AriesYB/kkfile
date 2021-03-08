@@ -61,9 +61,8 @@ public class OnlinePreviewController {
         String fileUrl = "";
         try {
             if (url != null) {
-                fileUrl = new String(Base64.decodeBase64(url));
+                fileUrl = url;
             } else if (fileId != null) {
-                fileId = new String(Base64.decodeBase64(fileId));
                 fileUrl = fileInfoService.getFileUrlByIdAndStatus(fileId);
                 if (fileUrl == null) {
                     model.addAttribute("msg", "未查询到文件记录!");
